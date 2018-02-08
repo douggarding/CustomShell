@@ -18,19 +18,27 @@ int main(int argc, const char * argv[]) {
     while(std::getline(std::cin, userCommand)){
         
         // Turn the user input into command(s)
-        std::vector<Command> commands = getCommands(tokenize(userCommand));
-        
+        std::vector<std::string> tokens = tokenize(userCommand);
+        std::vector<Command> commands = getCommands(tokens);
+
+        // Check for exit command
+        if("exit" == commands[0].exec){
+            return 0;
+        }
+
         // TODO: check if a real command exists. Then fork.
         int pid = fork();
         
         if(pid < 0){
-            std::cout << "fork() failed\n";
+            std::cout << "fork() failed. Exiting shell program.\n";
+            return 0;
         }
-        // WHY IS THIS USUALLY == 0??????????
+
         else if(pid == 0) { // CHILD PROCESS
             int working = 0;
             working = execvp(commands[0].argv[0], const_cast<char* const*>(commands[0].argv.data()));
 
+            // Check for errors with exec command
             if (working < 0){
                 std::cout << "execvp failed with error: " << errno << "\n";
                 exit(errno);
@@ -38,7 +46,7 @@ int main(int argc, const char * argv[]) {
         
         }
         else { // PARENT PROCESS
-            // Wait for child to finish
+            wait(NULL);
         }
 
         
