@@ -93,7 +93,6 @@ std::vector<Command> getCommands(const std::vector<std::string>& tokens){
 
 	ret[i].exec = tokens[first];
 	ret[i].argv.push_back(tokens[first].c_str()); //argv0 = program name
-	// std::cout << "exec start: " << ret[i].exec << std::endl;
 	ret[i].fdStdin = 0;
 	ret[i].fdStdout = 1;
 	ret[i].background = false;
