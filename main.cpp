@@ -32,6 +32,19 @@ int main(int argc, const char *argv[])
             return 0;
         }
 
+        // Check for a directory change
+        if ("cd" == commands[0].exec){
+            // If no arguments passed with "cd" command, return to home directory
+            if(commands[0].argv.size() == 2){ // size 2 because of NULL at end
+                chdir(getenv("HOME"));
+            }
+            else{
+                chdir(commands[0].argv[1]);
+            }
+            // Proceed to collect next commands
+            continue;
+        }
+
         // Process each of the commands
         for (int i = 0; i < commands.size(); i++){
             // TODO: check if a real command exists. Then fork.
