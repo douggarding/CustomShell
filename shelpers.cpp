@@ -129,18 +129,17 @@ std::vector<Command> getCommands(const std::vector<std::string> &tokens)
 				if (tokens[j] == "<")
 				{
 					// gets the file descriptor value
-					ret[i].fdStdin = open(tokens[j + 1].c_str(), O_RDONLY);
+					ret[i].fdStdin = open(tokens[++j].c_str(), O_RDONLY);
 				}
 				else if (tokens[j] == ">")
 				{
 					// gets the file descriptor value
-					ret[i].fdStdout = open(tokens[j + 1].c_str(), (O_CREAT | O_RDWR | O_TRUNC), 0666);
+					ret[i].fdStdout = open(tokens[++j].c_str(), (O_CREAT | O_RDWR | O_TRUNC), 0666);
 				}
 			}
 			else if (tokens[j] == "&")
 			{
-				//Fill this in if you choose to do the optional "background command" part
-				assert(false);
+				ret[i].background = true;
 			}
 			else
 			{

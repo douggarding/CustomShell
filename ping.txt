@@ -1,0 +1,10 @@
+PING star-mini.c10r.facebook.com (31.13.70.36): 56 data bytes
+64 bytes from 31.13.70.36: icmp_seq=0 ttl=51 time=14.829 ms
+64 bytes from 31.13.70.36: icmp_seq=1 ttl=51 time=14.956 ms
+64 bytes from 31.13.70.36: icmp_seq=2 ttl=51 time=14.847 ms
+64 bytes from 31.13.70.36: icmp_seq=3 ttl=51 time=16.737 ms
+64 bytes from 31.13.70.36: icmp_seq=4 ttl=51 time=16.495 ms
+
+--- star-mini.c10r.facebook.com ping statistics ---
+5 packets transmitted, 5 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 14.829/15.573/16.737/0.856 ms

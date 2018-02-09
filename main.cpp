@@ -15,12 +15,34 @@
 
 int main(int argc, const char *argv[])
 {
-
     std::string userCommand;
+
+    std::vector<pid_t> backgroundKids;
 
     // Running loop that allows for user to input their commands
     while (std::getline(std::cin, userCommand))
     {
+
+        // check for and alert of finished background commands
+        for(int i = 0; i < backgroundKids.size(); i++){
+            pid_t status = waitpid(backgroundKids[i], NULL, WNOHANG);
+            // background process is finished
+            if(status == backgroundKids[i]){
+                std::cout << "the following process was completed: " << status << "\n";
+                backgroundKids.erase(std::remove(backgroundKids.begin(), backgroundKids.end(), backgroundKids[i]), backgroundKids.end());
+            }
+            // background process still running
+            else if(status == 0){
+                // std::cout << "background process still running.\n";
+            }
+        }
+
+        std::vector<pid_t> waitingKids;
+
+        // Check for nothing
+        if("" == userCommand){
+            continue;
+        }
 
         // Turn the user input into command(s)
         std::vector<std::string> tokens = tokenize(userCommand);
@@ -41,14 +63,22 @@ int main(int argc, const char *argv[])
             else{
                 chdir(commands[0].argv[1]);
             }
-            // Proceed to collect next commands
+
             continue;
         }
 
         // Process each of the commands
         for (int i = 0; i < commands.size(); i++){
-            // TODO: check if a real command exists. Then fork.
-            int pid = fork();
+
+            pid_t pid = fork();
+
+            // Add child to appropriate background/nonbackground list
+            if(commands[i].background){
+                backgroundKids.push_back(pid);
+            }
+            else{
+                waitingKids.push_back(pid);
+            }
 
             if (pid < 0)
             {
@@ -62,6 +92,21 @@ int main(int argc, const char *argv[])
                 // Set up correct file descriptors.
                 dup2(commands[i].fdStdin, READ_END);
                 dup2(commands[i].fdStdout, WRITE_END);
+
+                // Close open file descriptors not used by this process
+                for(int j = 0; j < commands.size(); j++){
+                    // Skup current command
+                    if(i == j){
+                        continue;
+                    }
+
+                    if(commands[j].fdStdin != READ_END){
+                        close(commands[j].fdStdin);
+                    }
+                    if(commands[j].fdStdout != WRITE_END){
+                        close(commands[j].fdStdout);
+                    }
+                }
 
                 int working = 0;
                 working = execvp(commands[i].argv[0], const_cast<char *const *>(commands[i].argv.data()));
@@ -85,10 +130,14 @@ int main(int argc, const char *argv[])
                     close(commands[i].fdStdout);
                 }
 
-                wait(NULL); 
-            }
-        }
-    }
+                // Wait for children to complete in orderin order
+                for(int i = 0; i < waitingKids.size(); i++){
+                    waitpid(waitingKids[i], NULL, 0);
+                }
+               
+            } // END PARENT
+        } // END PROCESSING COMMANDS
+    } // END WHILE LOOP FOR PROGRAM
 
     std::cout << "PROGRAM TERMINATED!\n";
     return 0;
