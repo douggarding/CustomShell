@@ -101,13 +101,17 @@ std::ostream &operator<<(std::ostream &outs, const Command &c)
 std::vector<Command> getCommands(const std::vector<std::string> &tokens)
 {
 
-	//Create vector of commands to be returned. (1 + num |'s commands)
+	// Create vector of commands to be returned. (1 + num |'s commands)
 	std::vector<Command> ret(std::count(tokens.begin(), tokens.end(), "|") + 1);
 
 	int first = 0;
+	// Searches in the range defined by its first two arguments. It returns an iterator pointing
+	// to the first element that matches. If no element matches, it returns its 2nd parameter.
+	// Get the position of the token right before the first '|'?
 	int last = (int)(std::find(tokens.begin(), tokens.end(), "|") - tokens.begin());
 	bool error = false;
 
+	// Create and process each command. ('i' represents which command is being worked).
 	for (int i = 0; i < ret.size(); ++i)
 	{
 		if ((tokens[first] == "&") || (tokens[first] == "<") || (tokens[first] == ">") || (tokens[first] == "|"))
@@ -116,14 +120,16 @@ std::vector<Command> getCommands(const std::vector<std::string> &tokens)
 			break;
 		}
 
-		ret[i].exec = tokens[first];
-		ret[i].argv.push_back(tokens[first].c_str()); //argv0 = program name
-		ret[i].fdStdin = 0;
-		ret[i].fdStdout = 1;
-		ret[i].background = false;
+		ret[i].exec = tokens[first]; // get the name of the program to execute
+		ret[i].argv.push_back(tokens[first].c_str()); // contains command and its flags
+		ret[i].fdStdin = 0; // set file descriptor "in" to standard input
+		ret[i].fdStdout = 1; // set file descriptor "out" to standard output
+		ret[i].background = false; // set this command to not run in the background
 
+		// Check all the tokens associated with this command
 		for (int j = first + 1; j < last; ++j)
 		{
+			// If there is a redirection token, set the file descriptor to redirect as specified
 			if (tokens[j] == ">" || tokens[j] == "<")
 			{
 				if (tokens[j] == "<")
@@ -137,22 +143,24 @@ std::vector<Command> getCommands(const std::vector<std::string> &tokens)
 					ret[i].fdStdout = open(tokens[++j].c_str(), (O_CREAT | O_RDWR | O_TRUNC), 0666);
 				}
 			}
+
+			// If there is an '&' symbol in this command, set it to run in the background
 			else if (tokens[j] == "&")
 			{
 				ret[i].background = true;
 			}
+			// If here, this is a normal command line argument
 			else
 			{
-				//otherwise this is a normal command line argument!
 				ret[i].argv.push_back(tokens[j].c_str());
 			}
-		}
+		} // end for loop
+
+
+		// If we're here, then there was a command before this one, and we need
+		// to pipe the previous command to the current one.
 		if (i > 0)
 		{
-			/* there are multiple commands.  Open a pipe and
-		 Connect the ends to the fds for the commands!
-	    */
-
 			// Create pipe
 			int pipeFileDesc[2];
 			int pipeRetValue = pipe(pipeFileDesc);
@@ -167,10 +175,11 @@ std::vector<Command> getCommands(const std::vector<std::string> &tokens)
 			ret[i - 1].fdStdout = pipeFileDesc[1];
 
 		}
-		//exec wants argv to have a nullptr at the end!
+
+		// exec wants argv to have a nullptr at the end!
 		ret[i].argv.push_back(nullptr);
 
-		//find the next pipe character
+		// find the next pipe character
 		first = last + 1;
 		if (first < tokens.size())
 		{

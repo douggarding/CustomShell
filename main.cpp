@@ -23,6 +23,11 @@ int main(int argc, const char *argv[])
     while (std::getline(std::cin, userCommand))
     {
 
+        // Check for exit command
+        if("exit" == userCommand){
+            return 0;
+        }
+
         // check for and alert of finished background commands
         for(int i = 0; i < backgroundKids.size(); i++){
             pid_t status = waitpid(backgroundKids[i], NULL, WNOHANG);
@@ -47,12 +52,6 @@ int main(int argc, const char *argv[])
         // Turn the user input into command(s)
         std::vector<std::string> tokens = tokenize(userCommand);
         std::vector<Command> commands = getCommands(tokens);
-
-        // Check for exit command
-        if ("exit" == commands[0].exec)
-        {
-            return 0;
-        }
 
         // Check for a directory change
         if ("cd" == commands[0].exec){
@@ -114,7 +113,7 @@ int main(int argc, const char *argv[])
                 // Check for errors with exec command
                 if (working < 0)
                 {
-                    std::cout << "execvp failed with error: " << errno << "\n";
+                    std::cout << "Your command (exec) failed with error: " << errno << "\n";
                     exit(errno);
                 }
             }
@@ -130,7 +129,7 @@ int main(int argc, const char *argv[])
                     close(commands[i].fdStdout);
                 }
 
-                // Wait for children to complete in orderin order
+                // Wait for children to complete in order
                 for(int i = 0; i < waitingKids.size(); i++){
                     waitpid(waitingKids[i], NULL, 0);
                 }
